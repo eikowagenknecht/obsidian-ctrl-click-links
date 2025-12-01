@@ -61,28 +61,46 @@ export default class LinkOpeningRestore extends Plugin {
 		// Handle macOS (Command key) and other platforms (Ctrl key)
 		const modifierKeyPressed = this.#isMac ? event.metaKey : event.ctrlKey;
 
-		// Shift + Modifier: Open in new window
-		if (event.shiftKey && modifierKeyPressed) {
-			// console.log('[debug] #clickEventHandler open in new window', decodeURIComponent(target.textContent!));
-			// I'm not sure if this is the best practice.
-			this.app.workspace
-				.openPopoutLeaf()
-				.openFile(
-					this.app.metadataCache.getFirstLinkpathDest(
-						decodeURIComponent(target.textContent!),
-						""
-					)!
-				);
+		// Get the link path from the target
+		const linkText = decodeURIComponent(target.textContent!);
+		const file = this.app.metadataCache.getFirstLinkpathDest(linkText, "");
+
+		// Ctrl + Alt + Shift + Click: Open in new window
+		if (event.altKey && event.shiftKey && modifierKeyPressed) {
+			// console.log('[debug] #clickEventHandler open in new window', linkText);
+			if (file) {
+				this.app.workspace.openPopoutLeaf().openFile(file);
+			}
 			event.preventDefault();
 			event.stopPropagation();
 			return;
 		}
 
-		// If modifier key not pressed, prevent default link behavior
-		if (!modifierKeyPressed) {
+		// Ctrl + Shift + Click: Open in new tab
+		if (event.shiftKey && modifierKeyPressed && !event.altKey) {
+			// console.log('[debug] #clickEventHandler open in new tab', linkText);
+			if (file) {
+				this.app.workspace.getLeaf('tab').openFile(file);
+			}
 			event.preventDefault();
 			event.stopPropagation();
+			return;
 		}
+
+		// Ctrl + Click: Open in same tab
+		if (modifierKeyPressed && !event.shiftKey && !event.altKey) {
+			// console.log('[debug] #clickEventHandler open in same tab', linkText);
+			if (file) {
+				this.app.workspace.getLeaf(false).openFile(file);
+			}
+			event.preventDefault();
+			event.stopPropagation();
+			return;
+		}
+
+		// Click without modifiers: Prevent default (allow edit mode)
+		event.preventDefault();
+		event.stopPropagation();
 	};
 
 	#addListenerToElement(element: Element) {
