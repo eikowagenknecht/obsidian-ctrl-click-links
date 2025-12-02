@@ -52,23 +52,32 @@ export default class CtrlClickLinksPlugin extends Plugin {
 
 	#clickEventHandler = (event: MouseEvent) => {
 		const target = event.target as HTMLElement;
-		const isLink = target.tagName === "A" ||
-			CtrlClickLinksPlugin.LINK_CLASSES.some(cls => target.classList.contains(cls));
 
-		if (!isLink) {
+		if (!this.#isLinkElement(target)) {
 			return;
 		}
 
-		// Handle macOS (Command key) and other platforms (Ctrl key)
 		const modifierKeyPressed = this.#isMac ? event.metaKey : event.ctrlKey;
 
 		// For external links with modifier key, allow default browser behavior
-		if (target instanceof HTMLAnchorElement && target.href && modifierKeyPressed) {
-			// Let the browser handle external links with Ctrl+Click
+		if (this.#isExternalLink(target) && modifierKeyPressed) {
 			return;
 		}
 
-		// Get the link path from the target (for internal links)
+		// Handle internal link opening with various modifier combinations
+		this.#handleInternalLinkClick(target, event, modifierKeyPressed);
+	};
+
+	#isLinkElement(target: HTMLElement): boolean {
+		return target.tagName === "A" ||
+			CtrlClickLinksPlugin.LINK_CLASSES.some(cls => target.classList.contains(cls));
+	}
+
+	#isExternalLink(target: HTMLElement): boolean {
+		return target instanceof HTMLAnchorElement && !!target.href;
+	}
+
+	#handleInternalLinkClick(target: HTMLElement, event: MouseEvent, modifierKeyPressed: boolean) {
 		const linkText = decodeURIComponent(target.textContent!);
 		const file = this.app.metadataCache.getFirstLinkpathDest(linkText, "");
 
@@ -101,7 +110,7 @@ export default class CtrlClickLinksPlugin extends Plugin {
 
 		// Click without modifiers: Prevent default (allow edit mode)
 		this.#preventEvent(event);
-	};
+	}
 
 	#addListenerToElement(element: Element) {
 		element.addEventListener("click", this.#clickEventHandler, {
