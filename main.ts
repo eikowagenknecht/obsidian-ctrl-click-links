@@ -61,7 +61,16 @@ export default class LinkOpeningRestore extends Plugin {
 		// Handle macOS (Command key) and other platforms (Ctrl key)
 		const modifierKeyPressed = this.#isMac ? event.metaKey : event.ctrlKey;
 
-		// Get the link path from the target
+		// Check if this is an external link (has href attribute)
+		const isExternalLink = target.tagName === "A" && (target as HTMLAnchorElement).href;
+
+		// For external links with modifier key, allow default browser behavior
+		if (isExternalLink && modifierKeyPressed) {
+			// Let the browser handle external links with Ctrl+Click
+			return;
+		}
+
+		// Get the link path from the target (for internal links)
 		const linkText = decodeURIComponent(target.textContent!);
 		const file = this.app.metadataCache.getFirstLinkpathDest(linkText, "");
 
