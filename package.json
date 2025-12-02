@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-ctrl-click-links",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"description": "Make links require Ctrl + Left Click to open.",
 	"main": "main.js",
 	"scripts": {
