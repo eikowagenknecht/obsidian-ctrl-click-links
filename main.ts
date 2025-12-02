@@ -74,7 +74,18 @@ export default class CtrlClickLinksPlugin extends Plugin {
 	}
 
 	#isExternalLink(target: HTMLElement): boolean {
-		return target instanceof HTMLAnchorElement && !!target.href;
+		// Check if it's an actual anchor element with href (and not just href="#")
+		if (target instanceof HTMLAnchorElement && target.href && target.href !== window.location.href + '#') {
+			return true;
+		}
+
+		// Check if target or its parent has cm-url class (for plain URLs)
+		if (target.classList.contains("cm-url") ||
+		    (target.parentElement && target.parentElement.classList.contains("cm-url"))) {
+			return true;
+		}
+
+		return false;
 	}
 
 	#handleInternalLinkClick(target: HTMLElement, event: MouseEvent, modifierKeyPressed: boolean) {
