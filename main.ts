@@ -81,7 +81,7 @@ export default class CtrlClickLinksPlugin extends Plugin {
 
 		// Check if target or its parent has cm-url class (for plain URLs)
 		if (target.classList.contains("cm-url") ||
-		    (target.parentElement && target.parentElement.classList.contains("cm-url"))) {
+			(target.parentElement && target.parentElement.classList.contains("cm-url"))) {
 			return true;
 		}
 
