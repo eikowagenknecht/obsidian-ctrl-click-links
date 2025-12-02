@@ -39,7 +39,7 @@ export default class CtrlClickLinksPlugin extends Plugin {
 
 				this.#addListenerToElement(editorEl);
 
-				const originalUnload = leaf.view.onunload;
+				const originalUnload = leaf.view.onunload.bind(leaf.view);
 				leaf.view.onunload = () => {
 					this.#registeredLeafs.delete(leaf);
 					this.#removeListenerFromElement(editorEl);
@@ -89,13 +89,13 @@ export default class CtrlClickLinksPlugin extends Plugin {
 	}
 
 	#handleInternalLinkClick(target: HTMLElement, event: MouseEvent, modifierKeyPressed: boolean) {
-		const linkText = decodeURIComponent(target.textContent!);
+		const linkText = decodeURIComponent(target.textContent ?? "");
 		const file = this.app.metadataCache.getFirstLinkpathDest(linkText, "");
 
 		// Ctrl + Alt + Shift + Click: Open in new window
 		if (event.altKey && event.shiftKey && modifierKeyPressed) {
 			if (file) {
-				this.app.workspace.openPopoutLeaf().openFile(file);
+				this.app.workspace.openPopoutLeaf().openFile(file).catch(console.error);
 			}
 			this.#preventEvent(event);
 			return;
@@ -104,7 +104,7 @@ export default class CtrlClickLinksPlugin extends Plugin {
 		// Ctrl + Shift + Click: Open in new tab
 		if (event.shiftKey && modifierKeyPressed && !event.altKey) {
 			if (file) {
-				this.app.workspace.getLeaf('tab').openFile(file);
+				this.app.workspace.getLeaf('tab').openFile(file).catch(console.error);
 			}
 			this.#preventEvent(event);
 			return;
@@ -113,7 +113,7 @@ export default class CtrlClickLinksPlugin extends Plugin {
 		// Ctrl + Click: Open in same tab
 		if (modifierKeyPressed && !event.shiftKey && !event.altKey) {
 			if (file) {
-				this.app.workspace.getLeaf(false).openFile(file);
+				this.app.workspace.getLeaf(false).openFile(file).catch(console.error);
 			}
 			this.#preventEvent(event);
 			return;
