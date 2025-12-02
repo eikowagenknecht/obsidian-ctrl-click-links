@@ -1,8 +1,8 @@
-import { Plugin, WorkspaceLeaf } from "obsidian";
+import { Platform, Plugin, WorkspaceLeaf } from "obsidian";
 
 export default class LinkOpeningRestore extends Plugin {
 	#registeredLeafs = new Set<WorkspaceLeaf>();
-	#isMac = navigator.platform.toUpperCase().includes("MAC"); // Detect macOS platform
+	#isMac = Platform.isMacOS;
 
 	override onload() {
 		this.app.workspace.on("file-open", () => {
