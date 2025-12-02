@@ -1,6 +1,6 @@
 {
-	"name": "obsidian-sample-plugin",
-	"version": "1.2.1",
+	"name": "obsidian-ctrl-click-links",
+	"version": "2.0.0",
 	"description": "Make links require Ctrl + Left Click to open.",
 	"main": "main.js",
 	"scripts": {
@@ -8,9 +8,17 @@
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
-	"keywords": [],
-	"author": "",
-	"license": "MIT",
+	"keywords": ["obsidian", "obsidian-plugin", "links", "ctrl-click"],
+	"author": "eikowagenknecht",
+	"license": "Apache-2.0",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/eikowagenknecht/obsidian-ctrl-click-links.git"
+	},
+	"homepage": "https://github.com/eikowagenknecht/obsidian-ctrl-click-links#readme",
+	"bugs": {
+		"url": "https://github.com/eikowagenknecht/obsidian-ctrl-click-links/issues"
+	},
 	"devDependencies": {
 		"@types/node": "^16.11.6",
 		"@typescript-eslint/eslint-plugin": "5.29.0",

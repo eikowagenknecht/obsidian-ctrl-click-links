@@ -1,10 +1,10 @@
 {
-	"id": "link-opening-restore",
-	"name": "Link Opening Restore",
-	"version": "1.2.1",
+	"id": "ctrl-click-links",
+	"name": "Ctrl Click Links",
+	"version": "2.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Make links require Ctrl + Left Click to open.",
-	"author": "SmallZombie",
-	"authorUrl": "https://github.com/SmallZombie",
+	"author": "eikowagenknecht",
+	"authorUrl": "https://github.com/eikowagenknecht",
 	"isDesktopOnly": true
 }
