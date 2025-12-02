@@ -50,8 +50,8 @@ npm run build
 
 ### Creating a Release
 
-1. Update version in `manifest.json`
-2. Run `npm run version` to update version files
+1. Update version in `package.json`
+2. Run `npm run version` to automatically update `manifest.json` and `versions.json`
 3. Commit changes
 4. Create and push a git tag:
    ```bash
