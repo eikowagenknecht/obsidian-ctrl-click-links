@@ -1,6 +1,6 @@
 import { Platform, Plugin, WorkspaceLeaf } from "obsidian";
 
-export default class LinkOpeningRestore extends Plugin {
+export default class CtrlClickLinksPlugin extends Plugin {
 	#registeredLeafs = new Set<WorkspaceLeaf>();
 	#isMac = Platform.isMacOS;
 
