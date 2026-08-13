@@ -18,20 +18,19 @@ Works with all link types:
 
 ## Installation
 
-### Using BRAT (Recommended)
+### Community Plugins (Recommended)
 
-1. Install the [BRAT plugin](https://github.com/TfTHacker/obsidian42-brat) if you haven't already
-2. Open Obsidian Settings → BRAT
-3. Click "Add Beta plugin"
-4. Enter: `eikowagenknecht/obsidian-ctrl-click-links`
-5. Enable the plugin in Settings → Community Plugins
+1. Open Obsidian Settings → Community Plugins
+2. Click "Browse" and search for "Ctrl Click Links"
+3. Click "Install", then "Enable"
 
-BRAT will automatically check for updates and keep the plugin up to date.
+Obsidian will keep the plugin up to date automatically. The plugin page is
+also available at [obsidian.md/plugins](https://obsidian.md/plugins?id=ctrl-click-links).
 
 ### Manual Installation
 
 1. Download `main.js` and `manifest.json` from the [latest release](https://github.com/eikowagenknecht/obsidian-ctrl-click-links/releases)
-2. Create a folder named `obsidian-ctrl-click-links` in your vault's `.obsidian/plugins/` directory
+2. Create a folder named `ctrl-click-links` in your vault's `.obsidian/plugins/` directory
 3. Copy the downloaded files into this folder
 4. Reload Obsidian and enable the plugin in Settings → Community Plugins
 
