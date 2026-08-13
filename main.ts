@@ -1,59 +1,25 @@
-import { Platform, Plugin, WorkspaceLeaf } from "obsidian";
+import { Platform, Plugin } from "obsidian";
 
 export default class CtrlClickLinksPlugin extends Plugin {
-	private static readonly MARKDOWN_VIEW = "markdown";
 	private static readonly EDITOR_SELECTOR = ".cm-content";
 	private static readonly LINK_CLASSES = ["cm-hmd-internal-link", "cm-link", "cm-url"];
 
-	#registeredLeafs = new Set<WorkspaceLeaf>();
 	#isMac = Platform.isMacOS;
 
 	override onload() {
-		this.app.workspace.on("file-open", () => {
-			this.#recheckAllLeafs();
-		});
-		this.#recheckAllLeafs();
+		document.addEventListener("click", this.#clickEventHandler, true);
+		document.addEventListener("mousedown", this.#mousedownEventHandler, true);
 	}
 
 	override onunload() {
-		this.#registeredLeafs.forEach((v) => {
-			const editorEl = v.view.containerEl.querySelector(CtrlClickLinksPlugin.EDITOR_SELECTOR);
-			if (editorEl) {
-				this.#removeListenerFromElement(editorEl);
-			}
-		});
-	}
-
-	#recheckAllLeafs() {
-		this.app.workspace.iterateAllLeaves((leaf) => {
-			if (
-				leaf.view.getViewType() === CtrlClickLinksPlugin.MARKDOWN_VIEW &&
-				!this.#registeredLeafs.has(leaf)
-			) {
-				this.#registeredLeafs.add(leaf);
-				const editorEl =
-					leaf.view.containerEl.querySelector(CtrlClickLinksPlugin.EDITOR_SELECTOR);
-				// In some cases, this will be null.
-				// —— I couldn't reproduce this issue in my environment, Let's leave it at that for now.
-				if (!editorEl) return;
-
-				this.#addListenerToElement(editorEl);
-
-				const originalUnload = leaf.view.onunload.bind(leaf.view);
-				leaf.view.onunload = () => {
-					this.#registeredLeafs.delete(leaf);
-					this.#removeListenerFromElement(editorEl);
-					originalUnload();
-					leaf.view.onunload = originalUnload;
-				};
-			}
-		});
+		document.removeEventListener("click", this.#clickEventHandler, true);
+		document.removeEventListener("mousedown", this.#mousedownEventHandler, true);
 	}
 
 	#clickEventHandler = (event: MouseEvent) => {
 		const target = event.target as HTMLElement;
 
-		if (!this.#isLinkElement(target)) {
+		if (!this.#isEditorLink(target)) {
 			return;
 		}
 
@@ -68,6 +34,24 @@ export default class CtrlClickLinksPlugin extends Plugin {
 		this.#handleInternalLinkClick(target, event, modifierKeyPressed);
 	};
 
+	// Links are draggable by default, which makes the caret land in the wrong
+	// place on click. Disabling it lets the click position the cursor correctly.
+	#mousedownEventHandler = (event: MouseEvent) => {
+		const target = event.target as HTMLElement;
+
+		if (!this.#isEditorLink(target)) {
+			return;
+		}
+
+		target.draggable = false;
+	};
+
+	// Only act on links inside a CodeMirror editor, so reading view and other
+	// parts of the UI keep their default behavior.
+	#isEditorLink(target: HTMLElement): boolean {
+		return !!target.closest(CtrlClickLinksPlugin.EDITOR_SELECTOR) && this.#isLinkElement(target);
+	}
+
 	#isLinkElement(target: HTMLElement): boolean {
 		return target.tagName === "A" ||
 			CtrlClickLinksPlugin.LINK_CLASSES.some(cls => target.classList.contains(cls));
@@ -75,7 +59,7 @@ export default class CtrlClickLinksPlugin extends Plugin {
 
 	#isExternalLink(target: HTMLElement): boolean {
 		// Check if it's an actual anchor element with href (and not just href="#")
-		if (target instanceof HTMLAnchorElement && target.href && target.href !== window.location.href + '#') {
+		if (target.instanceOf(HTMLAnchorElement) && target.href && target.href !== window.location.href + '#') {
 			return true;
 		}
 
@@ -121,18 +105,6 @@ export default class CtrlClickLinksPlugin extends Plugin {
 
 		// Click without modifiers: Prevent default (allow edit mode)
 		this.#preventEvent(event);
-	}
-
-	#addListenerToElement(element: Element) {
-		element.addEventListener("click", this.#clickEventHandler, {
-			capture: true,
-		});
-	}
-
-	#removeListenerFromElement(element: Element) {
-		element.removeEventListener("click", this.#clickEventHandler, {
-			capture: true,
-		});
 	}
 
 	#preventEvent(event: MouseEvent) {
