@@ -2,7 +2,10 @@ import { MarkdownView, PaneType, Platform, Plugin } from "obsidian";
 
 export default class CtrlClickLinksPlugin extends Plugin {
 	private static readonly EDITOR_SELECTOR = ".cm-content";
-	private static readonly LINK_CLASSES = ["cm-hmd-internal-link", "cm-link", "cm-url"];
+	// Obsidian nests the visible link text in further spans (e.g. .cm-underline),
+	// so the click target is usually a descendant of the element carrying these.
+	private static readonly LINK_SELECTOR = "a, .cm-hmd-internal-link, .cm-link, .cm-url";
+	private static readonly EXTERNAL_LINK_TYPES = ["external-link", "external-ref-link"];
 
 	#isMac = Platform.isMacOS;
 
@@ -25,13 +28,21 @@ export default class CtrlClickLinksPlugin extends Plugin {
 
 		const modifierKeyPressed = this.#isMac ? event.metaKey : event.ctrlKey;
 
-		// For external links with modifier key, allow default browser behavior
-		if (this.#isExternalLink(target) && modifierKeyPressed) {
+		// Without a modifier the click should only place the cursor, so
+		// suppress Obsidian's own link handling.
+		if (!modifierKeyPressed) {
+			this.#preventEvent(event);
 			return;
 		}
 
-		// Handle internal link opening with various modifier combinations
-		this.#handleInternalLinkClick(target, event, modifierKeyPressed);
+		const link = this.#resolveLink(target, event);
+
+		// For external links with modifier key, let Obsidian open them as usual
+		if (link && CtrlClickLinksPlugin.EXTERNAL_LINK_TYPES.includes(link.type)) {
+			return;
+		}
+
+		this.#handleInternalLinkClick(link, event);
 	};
 
 	// Links are draggable by default, which makes the caret land in the wrong
@@ -49,37 +60,12 @@ export default class CtrlClickLinksPlugin extends Plugin {
 	// Only act on links inside a CodeMirror editor, so reading view and other
 	// parts of the UI keep their default behavior.
 	#isEditorLink(target: HTMLElement): boolean {
-		return !!target.closest(CtrlClickLinksPlugin.EDITOR_SELECTOR) && this.#isLinkElement(target);
+		return !!target.closest(CtrlClickLinksPlugin.EDITOR_SELECTOR) &&
+			!!target.closest(CtrlClickLinksPlugin.LINK_SELECTOR);
 	}
 
-	#isLinkElement(target: HTMLElement): boolean {
-		return target.tagName === "A" ||
-			CtrlClickLinksPlugin.LINK_CLASSES.some(cls => target.classList.contains(cls));
-	}
-
-	#isExternalLink(target: HTMLElement): boolean {
-		// Check if it's an actual anchor element with href (and not just href="#")
-		if (target.instanceOf(HTMLAnchorElement) && target.href && target.href !== window.location.href + '#') {
-			return true;
-		}
-
-		// Check if target or its parent has cm-url class (for plain URLs)
-		if (target.classList.contains("cm-url") ||
-			(target.parentElement && target.parentElement.classList.contains("cm-url"))) {
-			return true;
-		}
-
-		return false;
-	}
-
-	#handleInternalLinkClick(target: HTMLElement, event: MouseEvent, modifierKeyPressed: boolean) {
-		// Suppress Obsidian's own handling either way: without a modifier the
-		// click should only place the cursor.
+	#handleInternalLinkClick(link: ResolvedLink | null, event: MouseEvent) {
 		this.#preventEvent(event);
-
-		if (!modifierKeyPressed) {
-			return;
-		}
 
 		let newLeaf: PaneType | false;
 		if (event.altKey && event.shiftKey) {
@@ -96,7 +82,6 @@ export default class CtrlClickLinksPlugin extends Plugin {
 			return;
 		}
 
-		const link = this.#resolveLink(target, event);
 		if (!link) {
 			return;
 		}
@@ -110,7 +95,7 @@ export default class CtrlClickLinksPlugin extends Plugin {
 	// target for [[note|alias]] or [display](note.md). Ask the editor for the
 	// token under the pointer instead, which resolves to the real target and
 	// keeps any #heading or #^block subpath attached.
-	#resolveLink(target: HTMLElement, event: MouseEvent): { text: string; sourcePath: string } | null {
+	#resolveLink(target: HTMLElement, event: MouseEvent): ResolvedLink | null {
 		const view = this.#getMarkdownViewFor(target);
 		if (!view) {
 			return null;
@@ -127,7 +112,7 @@ export default class CtrlClickLinksPlugin extends Plugin {
 		}
 
 		// Links resolve relative to the note they are written in.
-		return { text: token.text, sourcePath: view.file?.path ?? "" };
+		return { text: token.text, type: token.type, sourcePath: view.file?.path ?? "" };
 	}
 
 	// Resolve the view from the clicked element rather than from the active
@@ -159,4 +144,10 @@ declare module "obsidian" {
 		posAtCoords(x: number, y: number): EditorPosition | null;
 		getClickableTokenAt(pos: EditorPosition): { text: string; type: string } | null;
 	}
+}
+
+interface ResolvedLink {
+	text: string;
+	type: string;
+	sourcePath: string;
 }
